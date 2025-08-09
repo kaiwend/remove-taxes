@@ -3,7 +3,7 @@ use std::process::Command;
 #[test]
 fn test_basic_calculation() {
     let output = Command::new("cargo")
-        .args(&["run", "--", "119"])
+        .args(["run", "--", "119"])
         .output()
         .expect("Failed to execute command");
 
@@ -16,7 +16,7 @@ fn test_basic_calculation() {
 #[test]
 fn test_multiple_numbers() {
     let output = Command::new("cargo")
-        .args(&["run", "--", "119", "238", "357"])
+        .args(["run", "--", "119", "238", "357"])
         .output()
         .expect("Failed to execute command");
 
@@ -29,7 +29,7 @@ fn test_multiple_numbers() {
 #[test]
 fn test_custom_vat_rate() {
     let output = Command::new("cargo")
-        .args(&["run", "--", "107", "--rate", "7"])
+        .args(["run", "--", "107", "--rate", "7"])
         .output()
         .expect("Failed to execute command");
 
@@ -41,7 +41,7 @@ fn test_custom_vat_rate() {
 #[test]
 fn test_comma_decimal_separator() {
     let output = Command::new("cargo")
-        .args(&["run", "--", "119,50"])
+        .args(["run", "--", "119,50"])
         .output()
         .expect("Failed to execute command");
 
@@ -53,7 +53,7 @@ fn test_comma_decimal_separator() {
 #[test]
 fn test_mixed_decimal_separators() {
     let output = Command::new("cargo")
-        .args(&["run", "--", "119,50", "238.00"])
+        .args(["run", "--", "119,50", "238.00"])
         .output()
         .expect("Failed to execute command");
 
@@ -67,7 +67,7 @@ fn test_mixed_decimal_separators() {
 #[test]
 fn test_no_arguments_shows_error() {
     let output = Command::new("cargo")
-        .args(&["run", "--"])
+        .args(["run", "--"])
         .output()
         .expect("Failed to execute command");
 
@@ -80,7 +80,7 @@ fn test_no_arguments_shows_error() {
 #[test]
 fn test_invalid_number_ignored() {
     let output = Command::new("cargo")
-        .args(&["run", "--", "119", "invalid", "238"])
+        .args(["run", "--", "119", "invalid", "238"])
         .output()
         .expect("Failed to execute command");
 
@@ -93,7 +93,7 @@ fn test_invalid_number_ignored() {
 #[test]
 fn test_rate_without_value_shows_error() {
     let output = Command::new("cargo")
-        .args(&["run", "--", "119", "--rate"])
+        .args(["run", "--", "119", "--rate"])
         .output()
         .expect("Failed to execute command");
 
@@ -106,7 +106,7 @@ fn test_rate_without_value_shows_error() {
 fn test_env_var_default_rate() {
     let output = Command::new("cargo")
         .env("DEFAULT_VAT_RATE", "7")
-        .args(&["run", "--", "107"])
+        .args(["run", "--", "107"])
         .output()
         .expect("Failed to execute command");
 
@@ -119,7 +119,7 @@ fn test_env_var_default_rate() {
 fn test_rate_flag_overrides_env_var() {
     let output = Command::new("cargo")
         .env("DEFAULT_VAT_RATE", "7")
-        .args(&["run", "--", "119", "--rate", "19"])
+        .args(["run", "--", "119", "--rate", "19"])
         .output()
         .expect("Failed to execute command");
 

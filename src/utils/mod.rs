@@ -14,4 +14,3 @@ pub fn copy_to_clipboard(content: &str) {
         }
     }
 }
-

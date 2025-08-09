@@ -142,23 +142,18 @@ mod tests {
                 uses_comma: true,
             },
         ];
-        assert_eq!(
-            create_clipboard_content(&results),
-            "100,42\n200.00\n300,00"
-        );
+        assert_eq!(create_clipboard_content(&results), "100,42\n200.00\n300,00");
     }
 
     #[test]
     fn test_display_results() {
         // This test captures stdout to verify display_results works
-        let results = vec![
-            CalculationResult {
-                with_vat: 119.0,
-                without_vat: 100.0,
-                uses_comma: false,
-            },
-        ];
-        
+        let results = vec![CalculationResult {
+            with_vat: 119.0,
+            without_vat: 100.0,
+            uses_comma: false,
+        }];
+
         // We can't easily capture stdout in tests, but we can ensure the function runs without panic
         display_results(&results, 19.0);
         // If this doesn't panic, the test passes
@@ -171,4 +166,3 @@ mod tests {
         print_table_row(119.0, 100.0, true);
     }
 }
-

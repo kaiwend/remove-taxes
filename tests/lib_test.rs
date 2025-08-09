@@ -1,8 +1,7 @@
+use remove_tax::calculator::{CalculationResult, process_numbers};
 use remove_tax::cli::{parse_arguments, print_usage};
 use remove_tax::display::{create_clipboard_content, display_results};
-use remove_tax::calculator::{process_numbers, CalculationResult};
 use remove_tax::utils::copy_to_clipboard;
-use std::io::{self, Write};
 
 #[test]
 fn test_integration_parse_error_flow() {
@@ -16,21 +15,18 @@ fn test_integration_parse_error_flow() {
 #[test]
 fn test_integration_full_flow() {
     // Test successful flow through all modules
-    let args = vec![
-        "program".to_string(),
-        "119".to_string(),
-    ];
-    
+    let args = vec!["program".to_string(), "119".to_string()];
+
     let parsed = parse_arguments(args).unwrap();
     assert_eq!(parsed.vat_rate, 19.0);
     assert_eq!(parsed.numbers.len(), 1);
-    
+
     let results = process_numbers(&parsed.numbers, parsed.vat_rate);
     assert_eq!(results.len(), 1);
-    
+
     let clipboard_content = create_clipboard_content(&results);
     assert_eq!(clipboard_content, "100.00");
-    
+
     // These functions print to stdout, just ensure they don't panic
     display_results(&results, parsed.vat_rate);
     copy_to_clipboard(&clipboard_content);

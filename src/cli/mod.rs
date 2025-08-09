@@ -202,4 +202,3 @@ mod tests {
         assert_eq!(get_default_vat_rate(), 19.0);
     }
 }
-

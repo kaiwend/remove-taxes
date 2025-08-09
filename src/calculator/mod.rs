@@ -143,4 +143,3 @@ mod tests {
         assert!(result.uses_comma);
     }
 }
-

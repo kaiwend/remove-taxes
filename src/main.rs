@@ -26,14 +26,14 @@ fn run(args: Vec<String>) -> Result<(), String> {
     display_results(&results, parsed_args.vat_rate);
     let clipboard_content = create_clipboard_content(&results);
     copy_to_clipboard(&clipboard_content);
-    
+
     Ok(())
 }
 
 fn main() {
     let args: Vec<String> = env::args().collect();
-    
-    if let Err(_) = run(args) {
+
+    if run(args).is_err() {
         std::process::exit(1);
     }
 }
@@ -67,10 +67,13 @@ mod tests {
 
     #[test]
     fn test_run_with_rate_missing_value() {
-        let args = vec!["program".to_string(), "100".to_string(), "--rate".to_string()];
+        let args = vec![
+            "program".to_string(),
+            "100".to_string(),
+            "--rate".to_string(),
+        ];
         let result = run(args);
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "--rate requires a value");
     }
 }
-
