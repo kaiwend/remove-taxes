@@ -10,97 +10,102 @@ struct NumberInput {
     uses_comma: bool,
 }
 
-fn main() {
-    let args: Vec<String> = env::args().collect();
+struct ParsedArgs {
+    numbers: Vec<NumberInput>,
+    vat_rate: f64,
+}
 
-    if args.len() < 2 {
-        eprintln!(
-            "Usage: {} <number1> [number2 ...] [--rate <percentage>]",
-            args[0]
-        );
-        eprintln!("Environment variable: DEFAULT_VAT_RATE (default: 19)");
-        std::process::exit(1);
-    }
+fn print_usage(program_name: &str) {
+    eprintln!("Usage: {program_name} <number1> [number2 ...] [--rate <percentage>]");
+    eprintln!("Environment variable: DEFAULT_VAT_RATE (default: 19)");
+}
 
-    let default_rate = env::var("DEFAULT_VAT_RATE")
+fn get_default_vat_rate() -> f64 {
+    env::var("DEFAULT_VAT_RATE")
         .ok()
         .and_then(|v| v.parse::<f64>().ok())
-        .unwrap_or(19.0);
+        .unwrap_or(19.0)
+}
 
-    let mut vat_rate = default_rate;
+fn parse_number(input: &str) -> Option<NumberInput> {
+    let uses_comma = input.contains(',');
+    let normalized = input.replace(',', ".");
+
+    normalized
+        .parse::<f64>()
+        .ok()
+        .map(|value| NumberInput { value, uses_comma })
+}
+
+fn parse_vat_rate(input: &str) -> f64 {
+    input
+        .replace(',', ".")
+        .parse()
+        .unwrap_or_else(|_| get_default_vat_rate())
+}
+
+fn parse_arguments(args: Vec<String>) -> Result<ParsedArgs, String> {
+    if args.len() < 2 {
+        return Err("No arguments provided".to_string());
+    }
+
+    let mut vat_rate = get_default_vat_rate();
     let mut numbers = Vec::new();
     let mut i = 1;
 
     while i < args.len() {
         if args[i] == "--rate" {
             if i + 1 < args.len() {
-                let rate_str = args[i + 1].replace(',', ".");
-                vat_rate = rate_str.parse().unwrap_or(default_rate);
+                vat_rate = parse_vat_rate(&args[i + 1]);
                 i += 2;
             } else {
-                eprintln!("Error: --rate requires a value");
-                std::process::exit(1);
+                return Err("--rate requires a value".to_string());
             }
+        } else if let Some(number) = parse_number(&args[i]) {
+            numbers.push(number);
+            i += 1;
         } else {
-            let original = args[i].clone();
-            let uses_comma = original.contains(',');
-            let num_str = original.replace(',', ".");
-            if let Ok(num) = num_str.parse::<f64>() {
-                numbers.push(NumberInput {
-                    value: num,
-                    uses_comma,
-                });
-            }
             i += 1;
         }
     }
 
     if numbers.is_empty() {
-        eprintln!("Error: No valid numbers provided");
-        std::process::exit(1);
+        return Err("No valid numbers provided".to_string());
     }
 
-    let mut clipboard_text = Vec::new();
-    let mut results = Vec::new();
+    Ok(ParsedArgs { numbers, vat_rate })
+}
 
-    for input in &numbers {
-        let without_vat = calculate_without_vat(input.value, vat_rate);
-        results.push((input, without_vat));
-
-        let formatted = if input.uses_comma {
-            format!("{without_vat:.2}").replace('.', ",")
-        } else {
-            format!("{without_vat:.2}")
-        };
-        clipboard_text.push(formatted);
+fn format_number(value: f64, use_comma: bool) -> String {
+    let formatted = format!("{value:.2}");
+    if use_comma {
+        formatted.replace('.', ",")
+    } else {
+        formatted
     }
+}
 
+fn print_table_header(vat_rate: f64) {
     println!("\nVAT Rate: {vat_rate}%");
     println!("{:-<50}", "");
     println!("{:<20} | {:<20}", "With VAT", "Without VAT");
     println!("{:-<50}", "");
+}
 
-    for (input, without_vat) in &results {
-        let with_vat_str = if input.uses_comma {
-            format!("{:.2}", input.value).replace('.', ",")
-        } else {
-            format!("{:.2}", input.value)
-        };
-
-        let without_vat_str = if input.uses_comma {
-            format!("{without_vat:.2}").replace('.', ",")
-        } else {
-            format!("{without_vat:.2}")
-        };
-
-        println!("{with_vat_str:<20} | {without_vat_str:<20}");
-    }
+fn print_table_footer() {
     println!("{:-<50}", "");
+}
 
-    let clipboard_content = clipboard_text.join("\n");
+fn print_table_row(with_vat: f64, without_vat: f64, use_comma: bool) {
+    let with_vat_str = format_number(with_vat, use_comma);
+    let without_vat_str = format_number(without_vat, use_comma);
+    println!("{with_vat_str:<20} | {without_vat_str:<20}");
+}
+
+fn copy_to_clipboard(content: &str) {
     match Clipboard::new() {
         Ok(mut clipboard) => {
-            if let Err(e) = clipboard.set_text(&clipboard_content) {
+            if let Err(e) = clipboard.set_text(content) {
                 eprintln!("Warning: Could not copy to clipboard: {e}");
             } else {
                 println!("\n✓ Results copied to clipboard (without VAT values)");
@@ -110,6 +115,55 @@ fn main() {
             eprintln!("Warning: Could not access clipboard: {e}");
         }
     }
+}
+
+fn process_numbers(numbers: &[NumberInput], vat_rate: f64) -> Vec<(f64, f64, bool)> {
+    numbers
+        .iter()
+        .map(|input| {
+            let without_vat = calculate_without_vat(input.value, vat_rate);
+            (input.value, without_vat, input.uses_comma)
+        })
+        .collect()
+}
+
+fn create_clipboard_content(results: &[(f64, f64, bool)]) -> String {
+    results
+        .iter()
+        .map(|(_, without_vat, use_comma)| format_number(*without_vat, *use_comma))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+fn display_results(results: &[(f64, f64, bool)], vat_rate: f64) {
+    print_table_header(vat_rate);
+
+    for (with_vat, without_vat, use_comma) in results {
+        print_table_row(*with_vat, *without_vat, *use_comma);
+    }
+
+    print_table_footer();
+}
+
+fn main() {
+    let args: Vec<String> = env::args().collect();
+    let program_name = args[0].clone();
+
+    let parsed_args = match parse_arguments(args) {
+        Ok(args) => args,
+        Err(error) => {
+            eprintln!("Error: {error}");
+            print_usage(&program_name);
+            std::process::exit(1);
+        }
+    };
+
+    let results = process_numbers(&parsed_args.numbers, parsed_args.vat_rate);
+
+    display_results(&results, parsed_args.vat_rate);
+
+    let clipboard_content = create_clipboard_content(&results);
+    copy_to_clipboard(&clipboard_content);
 }
 
 #[cfg(test)]
@@ -143,6 +197,40 @@ mod tests {
             let result = calculate_without_vat(*value, 19.0);
             assert!((result - expected).abs() < 0.01);
         }
+    }
+
+    #[test]
+    fn test_parse_number_with_dot() {
+        let input = parse_number("123.45").unwrap();
+        assert_eq!(input.value, 123.45);
+        assert!(!input.uses_comma);
+    }
+
+    #[test]
+    fn test_parse_number_with_comma() {
+        let input = parse_number("123,45").unwrap();
+        assert_eq!(input.value, 123.45);
+        assert!(input.uses_comma);
+    }
+
+    #[test]
+    fn test_format_number_with_comma() {
+        assert_eq!(format_number(123.456, true), "123,46");
+    }
+
+    #[test]
+    fn test_format_number_with_dot() {
+        assert_eq!(format_number(123.456, false), "123.46");
+    }
+
+    #[test]
+    fn test_parse_vat_rate_with_comma() {
+        assert_eq!(parse_vat_rate("7,5"), 7.5);
+    }
+
+    #[test]
+    fn test_parse_vat_rate_with_dot() {
+        assert_eq!(parse_vat_rate("7.5"), 7.5);
     }
 }
 
