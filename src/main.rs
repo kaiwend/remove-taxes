@@ -26,14 +26,16 @@ fn main() {
     while i < args.len() {
         if args[i] == "--rate" {
             if i + 1 < args.len() {
-                vat_rate = args[i + 1].parse().unwrap_or(19.0);
+                let rate_str = args[i + 1].replace(',', ".");
+                vat_rate = rate_str.parse().unwrap_or(default_rate);
                 i += 2;
             } else {
                 eprintln!("Error: --rate requires a value");
                 std::process::exit(1);
             }
         } else {
-            if let Ok(num) = args[i].parse::<f64>() {
+            let num_str = args[i].replace(',', ".");
+            if let Ok(num) = num_str.parse::<f64>() {
                 numbers.push(num);
             }
             i += 1;
