@@ -1,7 +1,5 @@
 # remove-tax
 
-[![CI](https://github.com/yourusername/remove-tax/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/remove-tax/actions/workflows/ci.yml)
-
 A simple CLI tool to calculate prices without VAT (German MwSt). Automatically copies results to clipboard.
 
 ## Features
@@ -20,7 +18,7 @@ A simple CLI tool to calculate prices without VAT (German MwSt). Automatically c
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/remove-tax.git
+git clone https://github.com/kaiwend/remove-tax.git
 cd remove-tax
 
 # Build and install to /usr/local/bin (requires sudo)
