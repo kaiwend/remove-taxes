@@ -5,7 +5,7 @@ set -e
 echo "Building remove-tax in release mode..."
 cargo build --release
 
-INSTALL_DIR="${1:-$HOME/bin}"
+INSTALL_DIR="${1:-/usr/local/bin}"
 
 echo "Installing to $INSTALL_DIR..."
 if [[ "$INSTALL_DIR" == "/usr/local/bin" || "$INSTALL_DIR" == "/usr/bin" ]]; then
