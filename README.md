@@ -1,5 +1,7 @@
 # remove-tax
 
+[![CI](https://github.com/yourusername/remove-tax/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/remove-tax/actions/workflows/ci.yml)
+
 A simple CLI tool to calculate prices without VAT (German MwSt). Automatically copies results to clipboard.
 
 ## Features
@@ -10,19 +12,31 @@ A simple CLI tool to calculate prices without VAT (German MwSt). Automatically c
 - Preserve input number format in output
 - Automatically copy results to clipboard
 - Display results in a formatted table
+- Cross-platform support (Linux, Windows, macOS)
 
 ## Installation
+
+### From Source
 
 ```bash
 # Clone the repository
 git clone https://github.com/yourusername/remove-tax.git
 cd remove-tax
 
-# Install to /usr/local/bin (requires sudo)
+# Build and install to /usr/local/bin (requires sudo)
 ./install.sh
 
 # Or install to custom directory
 ./install.sh ~/bin
+```
+
+### Manual Build
+
+```bash
+# Build release version
+cargo build --release
+
+# Binary will be at ./target/release/remove-tax
 ```
 
 ## Usage
@@ -39,6 +53,9 @@ remove-tax 100 200 --rate 7
 
 # Set default VAT rate via environment variable
 DEFAULT_VAT_RATE=7 remove-tax 107 214
+
+# Mix number formats (comma and dot)
+remove-tax 119,50 238.00 --rate 7,5
 ```
 
 ## Example Output
@@ -54,6 +71,72 @@ With VAT             | Without VAT
 
 ✓ Results copied to clipboard (without VAT values)
 ```
+
+## Development
+
+### Project Structure
+
+```
+src/
+├── main.rs          # Application entry point
+├── lib.rs           # Library exports
+├── cli/             # Command-line argument parsing
+├── calculator/      # VAT calculation logic
+├── display/         # Output formatting and display
+└── utils/           # Clipboard utilities
+```
+
+### Building
+
+```bash
+# Debug build
+cargo build
+
+# Release build
+cargo build --release
+
+# Run directly
+cargo run -- 119 238
+```
+
+### Testing
+
+```bash
+# Run all tests
+cargo test
+
+# Run with verbose output
+cargo test --verbose
+
+# Run specific test module
+cargo test cli::tests
+
+# Check code coverage (requires cargo-tarpaulin)
+cargo tarpaulin --out Stdout
+```
+
+Current test coverage: **94.94%** (75/79 lines)
+
+### Code Quality
+
+```bash
+# Format code
+cargo fmt
+
+# Run clippy linter
+cargo clippy
+
+# Check formatting
+cargo fmt -- --check
+```
+
+## CI/CD
+
+The project uses GitHub Actions for continuous integration:
+
+- **Multi-platform testing**: Linux, Windows, macOS
+- **Automated checks**: Build, test, format, clippy
+- **Runs on**: Push to main branch and pull requests
 
 ## Requirements
 
