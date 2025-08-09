@@ -47,6 +47,42 @@ mod tests {
     }
 
     #[test]
+    fn test_calculate_without_vat_100_percent() {
+        let result = calculate_without_vat(200.0, 100.0);
+        assert!((result - 100.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_calculate_without_vat_negative_amount() {
+        let result = calculate_without_vat(-119.0, 19.0);
+        assert!((result - (-100.0)).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_calculate_without_vat_negative_rate() {
+        let result = calculate_without_vat(95.0, -5.0);
+        assert!((result - 100.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_calculate_without_vat_very_small_amount() {
+        let result = calculate_without_vat(0.0119, 19.0);
+        assert!((result - 0.01).abs() < 0.0001);
+    }
+
+    #[test]
+    fn test_calculate_without_vat_very_large_amount() {
+        let result = calculate_without_vat(1_000_000_000.0, 19.0);
+        assert!((result - 840_336_134.45).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_calculate_without_vat_fractional_rate() {
+        let result = calculate_without_vat(107.5, 7.5);
+        assert!((result - 100.0).abs() < 0.01);
+    }
+
+    #[test]
     fn test_calculate_multiple_values() {
         let values = [119.0, 238.0, 357.0];
         let expected = [100.0, 200.0, 300.0];
@@ -55,6 +91,56 @@ mod tests {
             let result = calculate_without_vat(*value, 19.0);
             assert!((result - expected).abs() < 0.01);
         }
+    }
+
+    #[test]
+    fn test_process_numbers_empty() {
+        let numbers = vec![];
+        let results = process_numbers(&numbers, 19.0);
+        assert_eq!(results.len(), 0);
+    }
+
+    #[test]
+    fn test_process_numbers_single() {
+        let numbers = vec![NumberInput {
+            value: 119.0,
+            uses_comma: false,
+        }];
+        let results = process_numbers(&numbers, 19.0);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].with_vat, 119.0);
+        assert!((results[0].without_vat - 100.0).abs() < 0.01);
+        assert!(!results[0].uses_comma);
+    }
+
+    #[test]
+    fn test_process_numbers_mixed_formats() {
+        let numbers = vec![
+            NumberInput {
+                value: 119.0,
+                uses_comma: true,
+            },
+            NumberInput {
+                value: 238.0,
+                uses_comma: false,
+            },
+        ];
+        let results = process_numbers(&numbers, 19.0);
+        assert_eq!(results.len(), 2);
+        assert!(results[0].uses_comma);
+        assert!(!results[1].uses_comma);
+    }
+
+    #[test]
+    fn test_calculation_result_structure() {
+        let result = CalculationResult {
+            with_vat: 119.0,
+            without_vat: 100.0,
+            uses_comma: true,
+        };
+        assert_eq!(result.with_vat, 119.0);
+        assert_eq!(result.without_vat, 100.0);
+        assert!(result.uses_comma);
     }
 }
 

@@ -1,10 +1,12 @@
 use std::env;
 
+#[derive(Debug)]
 pub struct NumberInput {
     pub value: f64,
     pub uses_comma: bool,
 }
 
+#[derive(Debug)]
 pub struct ParsedArgs {
     pub numbers: Vec<NumberInput>,
     pub vat_rate: f64,
@@ -90,6 +92,31 @@ mod tests {
     }
 
     #[test]
+    fn test_parse_number_invalid() {
+        assert!(parse_number("abc").is_none());
+        assert!(parse_number("12.34.56").is_none());
+        assert!(parse_number("").is_none());
+    }
+
+    #[test]
+    fn test_parse_number_negative() {
+        let input = parse_number("-123.45").unwrap();
+        assert_eq!(input.value, -123.45);
+    }
+
+    #[test]
+    fn test_parse_number_zero() {
+        let input = parse_number("0").unwrap();
+        assert_eq!(input.value, 0.0);
+    }
+
+    #[test]
+    fn test_parse_number_very_large() {
+        let input = parse_number("999999999.99").unwrap();
+        assert_eq!(input.value, 999999999.99);
+    }
+
+    #[test]
     fn test_parse_vat_rate_with_comma() {
         assert_eq!(parse_vat_rate("7,5"), 7.5);
     }
@@ -97,6 +124,82 @@ mod tests {
     #[test]
     fn test_parse_vat_rate_with_dot() {
         assert_eq!(parse_vat_rate("7.5"), 7.5);
+    }
+
+    #[test]
+    fn test_parse_vat_rate_invalid_returns_default() {
+        assert_eq!(parse_vat_rate("invalid"), 19.0);
+        assert_eq!(parse_vat_rate(""), 19.0);
+    }
+
+    #[test]
+    fn test_parse_vat_rate_negative() {
+        assert_eq!(parse_vat_rate("-5"), -5.0);
+    }
+
+    #[test]
+    fn test_parse_arguments_no_args() {
+        let args = vec!["program".to_string()];
+        let result = parse_arguments(args);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "No arguments provided");
+    }
+
+    #[test]
+    fn test_parse_arguments_only_invalid_numbers() {
+        let args = vec!["program".to_string(), "abc".to_string(), "xyz".to_string()];
+        let result = parse_arguments(args);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "No valid numbers provided");
+    }
+
+    #[test]
+    fn test_parse_arguments_with_rate() {
+        let args = vec![
+            "program".to_string(),
+            "100".to_string(),
+            "--rate".to_string(),
+            "7".to_string(),
+        ];
+        let result = parse_arguments(args).unwrap();
+        assert_eq!(result.vat_rate, 7.0);
+        assert_eq!(result.numbers.len(), 1);
+        assert_eq!(result.numbers[0].value, 100.0);
+    }
+
+    #[test]
+    fn test_parse_arguments_rate_without_value() {
+        let args = vec![
+            "program".to_string(),
+            "100".to_string(),
+            "--rate".to_string(),
+        ];
+        let result = parse_arguments(args);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "--rate requires a value");
+    }
+
+    #[test]
+    fn test_parse_arguments_mixed_valid_invalid() {
+        let args = vec![
+            "program".to_string(),
+            "100".to_string(),
+            "invalid".to_string(),
+            "200".to_string(),
+        ];
+        let result = parse_arguments(args).unwrap();
+        assert_eq!(result.numbers.len(), 2);
+        assert_eq!(result.numbers[0].value, 100.0);
+        assert_eq!(result.numbers[1].value, 200.0);
+    }
+
+    #[test]
+    fn test_get_default_vat_rate() {
+        // Test default when no env var
+        unsafe {
+            std::env::remove_var("DEFAULT_VAT_RATE");
+        }
+        assert_eq!(get_default_vat_rate(), 19.0);
     }
 }
 

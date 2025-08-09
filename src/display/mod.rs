@@ -47,6 +47,7 @@ pub fn create_clipboard_content(results: &[CalculationResult]) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::calculator::CalculationResult;
 
     #[test]
     fn test_format_number_with_comma() {
@@ -56,6 +57,95 @@ mod tests {
     #[test]
     fn test_format_number_with_dot() {
         assert_eq!(format_number(123.456, false), "123.46");
+    }
+
+    #[test]
+    fn test_format_number_zero() {
+        assert_eq!(format_number(0.0, false), "0.00");
+        assert_eq!(format_number(0.0, true), "0,00");
+    }
+
+    #[test]
+    fn test_format_number_negative() {
+        assert_eq!(format_number(-123.456, false), "-123.46");
+        assert_eq!(format_number(-123.456, true), "-123,46");
+    }
+
+    #[test]
+    fn test_format_number_very_large() {
+        assert_eq!(format_number(999999999.999, false), "1000000000.00");
+        assert_eq!(format_number(999999999.999, true), "1000000000,00");
+    }
+
+    #[test]
+    fn test_format_number_very_small() {
+        assert_eq!(format_number(0.001, false), "0.00");
+        assert_eq!(format_number(0.009, false), "0.01");
+    }
+
+    #[test]
+    fn test_format_number_rounding() {
+        assert_eq!(format_number(123.454, false), "123.45");
+        assert_eq!(format_number(123.455, false), "123.45");
+        assert_eq!(format_number(123.456, false), "123.46");
+    }
+
+    #[test]
+    fn test_create_clipboard_content_empty() {
+        let results = vec![];
+        assert_eq!(create_clipboard_content(&results), "");
+    }
+
+    #[test]
+    fn test_create_clipboard_content_single() {
+        let results = vec![CalculationResult {
+            with_vat: 119.0,
+            without_vat: 100.0,
+            uses_comma: false,
+        }];
+        assert_eq!(create_clipboard_content(&results), "100.00");
+    }
+
+    #[test]
+    fn test_create_clipboard_content_multiple() {
+        let results = vec![
+            CalculationResult {
+                with_vat: 119.0,
+                without_vat: 100.0,
+                uses_comma: false,
+            },
+            CalculationResult {
+                with_vat: 238.0,
+                without_vat: 200.0,
+                uses_comma: true,
+            },
+        ];
+        assert_eq!(create_clipboard_content(&results), "100.00\n200,00");
+    }
+
+    #[test]
+    fn test_create_clipboard_content_mixed_formats() {
+        let results = vec![
+            CalculationResult {
+                with_vat: 119.50,
+                without_vat: 100.42,
+                uses_comma: true,
+            },
+            CalculationResult {
+                with_vat: 238.00,
+                without_vat: 200.00,
+                uses_comma: false,
+            },
+            CalculationResult {
+                with_vat: 357.00,
+                without_vat: 300.00,
+                uses_comma: true,
+            },
+        ];
+        assert_eq!(
+            create_clipboard_content(&results),
+            "100,42\n200.00\n300,00"
+        );
     }
 }
 
