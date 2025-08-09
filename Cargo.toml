@@ -4,5 +4,13 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
 
+[lib]
+name = "remove_tax"
+path = "src/lib.rs"
+
+[[bin]]
+name = "remove-tax"
+path = "src/main.rs"
+
 [dependencies]
 arboard = "3.4"
